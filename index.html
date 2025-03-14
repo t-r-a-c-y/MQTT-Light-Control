@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT Light Control</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .on-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .off-btn {
+            background-color: #FF5733;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .status-container {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            color: white;
+        }
+
+        .status-on {
+            background-color: #4CAF50;
+        }
+
+        .status-off {
+            background-color: #FF5733;
+        }
+
+        .status-waiting {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h2>MQTT Light Control</h2>
+    
+    <div class="button-container">
+        <button class="on-btn" onclick="sendMessage('ON')">💡 Turn ON</button>
+        <button class="off-btn" onclick="sendMessage('OFF')">🔌 Turn OFF</button>
+    </div>
+
+    <p>Status: <span id="status" class="status-container status-waiting">Waiting...</span></p>
+
+    <script>
+        const broker = "wss://test.mosquitto.org:8081/mqtt"; // Public MQTT broker
+        const topic = "/student_group/light_control";
+        const client = mqtt.connect(broker);
+        const statusEl = document.getElementById("status");
+
+        client.on("connect", function () {
+            console.log("Connected to MQTT broker");
+            client.subscribe(topic); // Subscribe to the topic to receive updates
+        });
+
+        client.on("message", function (receivedTopic, message) {
+            if (receivedTopic === topic) {
+                const receivedCommand = message.toString();
+                updateStatus(receivedCommand);
+            }
+        });
+
+        function sendMessage(command) {
+            client.publish(topic, command);
+        }
+
+        function updateStatus(command) {
+            if (command === "ON") {
+                statusEl.textContent = "💡 Light is ON";
+                statusEl.className = "status-container status-on";
+            } else if (command === "OFF") {
+                statusEl.textContent = "🔌 Light is OFF";
+                statusEl.className = "status-container status-off";
+            }
+        }
+    </script>
+</body>
+</html>
